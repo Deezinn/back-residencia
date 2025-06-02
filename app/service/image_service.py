@@ -4,6 +4,9 @@ from fastapi import UploadFile
 from dotenv import load_dotenv
 import os
 
+from app.models.error_model import ErrorModel
+from app.repository.error_repository import save_error
+
 load_dotenv()
 
 API_TOKEN = os.getenv("API_TOKEN")
@@ -24,6 +27,27 @@ async def send_image_to_api(image: UploadFile, documentClassification: str):
       "Authorization": API_TOKEN,
    }
 
+
    response = requests.post(API_URL, json=payload, headers=headers)
    response.raise_for_status()
-   return response.json()
+   api_response = response.json()
+
+   codigo = response.status_code
+
+   try:
+      resultado = api_response["resultados"][0]
+      guid = api_response["guid"]
+   except (KeyError, IndexError):
+      raise ValueError("Resposta da API não tem os campos esperados")
+
+   error = ErrorModel(
+      userId=userId,
+      codigo=codigo,
+      guid=guid,
+      documentClassification=documentClassification,
+      image=encoded_image,
+      # resultado=resultado
+   )
+   await save_error(error)
+
+   return api_response

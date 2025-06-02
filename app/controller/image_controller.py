@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from service.image_service import send_image_to_api
+from app.service.image_service import send_image_to_api
 
 router = APIRouter()
 
